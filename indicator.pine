@@ -1,0 +1,156 @@
+//@version=6
+indicator("GC 1min Entry Areas", overlay=true, max_boxes_count=500)
+
+// Input parameters
+fvgMaxDistance = input.int(10, title="Max Candles from Fractal to FVG", minval=1, maxval=50)
+fvgMinTicks = input.int(5, title="Minimum FVG Size (ticks)", minval=1, maxval=100)
+maxEntryAreaSize = input.int(50, title="Max Entry Area Size (ticks)", minval=5, maxval=500)
+enableAlerts = input.bool(true, title="Enable Alerts")
+
+// Bill Williams Fractal Recognition
+isBWFractal(mode) =>
+    result = mode == 1 ? (high[4] < high[2] and high[3] <= high[2] and high[2] >= high[1] and high[2] > high[0]) : mode == -1 ? (low[4] > low[2] and low[3] >= low[2] and low[2] <= low[1] and low[2] < low[0]) : false
+    result
+
+// Detect fractals
+isHighFractal = bar_index >= 4 and isBWFractal(1)
+isLowFractal = bar_index >= 4 and isBWFractal(-1)
+
+// FVG detection with minimum tick size
+minGapSize = fvgMinTicks * syminfo.mintick
+bullishFVG = bar_index >= 2 and (low[0] - high[2]) >= minGapSize
+bearishFVG = bar_index >= 2 and (low[2] - high[0]) >= minGapSize
+
+// Store recent fractals (last 20 of each type)
+var float[] highFractals = array.new_float()
+var int[] highFractalBars = array.new_int()
+var float[] lowFractals = array.new_float()
+var int[] lowFractalBars = array.new_int()
+
+// Track used fractal pairs
+var string[] usedFractalPairs = array.new_string()
+
+// Track if new entry area was created (for alerts)
+var bool newEntryAreaCreated = false
+var float alertEntryTop = na
+var float alertEntryBottom = na
+
+// Add fractals to storage
+if isHighFractal
+    array.push(highFractals, high[2])
+    array.push(highFractalBars, bar_index - 2)
+    if array.size(highFractals) > 20
+        array.shift(highFractals)
+        array.shift(highFractalBars)
+
+if isLowFractal
+    array.push(lowFractals, low[2])
+    array.push(lowFractalBars, bar_index - 2)
+    if array.size(lowFractals) > 20
+        array.shift(lowFractals)
+        array.shift(lowFractalBars)
+
+// Array to store active entry area boxes
+var array<box> entryBoxes = array.new_box()
+
+// When FVG occurs, find the closest high and low fractals
+if bullishFVG or bearishFVG
+    
+    // Find closest high fractal before FVG
+    float closestHighFractal = na
+    int closestHighBar = na
+    
+    if array.size(highFractals) > 0
+        for i = array.size(highFractals) - 1 to 0
+            fractalBar = array.get(highFractalBars, i)
+            if fractalBar < bar_index
+                closestHighFractal := array.get(highFractals, i)
+                closestHighBar := fractalBar
+                break
+    
+    // Find closest low fractal before FVG
+    float closestLowFractal = na
+    int closestLowBar = na
+    
+    if array.size(lowFractals) > 0
+        for i = array.size(lowFractals) - 1 to 0
+            fractalBar = array.get(lowFractalBars, i)
+            if fractalBar < bar_index
+                closestLowFractal := array.get(lowFractals, i)
+                closestLowBar := fractalBar
+                break
+    
+    // Create box if we have both fractals and all conditions are met
+    if not na(closestHighFractal) and not na(closestLowFractal)
+        nearestFractalBar = math.max(closestHighBar, closestLowBar)
+        barsFromFractal = bar_index - nearestFractalBar
+        
+        // Calculate entry area size in ticks
+        entryAreaSize = (closestHighFractal - closestLowFractal) / syminfo.mintick
+        
+        // Create unique ID for this fractal pair
+        pairId = str.tostring(closestHighBar) + "_" + str.tostring(closestLowBar)
+        
+        // Check if already used
+        bool alreadyUsed = false
+        if array.size(usedFractalPairs) > 0
+            for p = 0 to array.size(usedFractalPairs) - 1
+                if array.get(usedFractalPairs, p) == pairId
+                    alreadyUsed := true
+                    break
+        
+        // Check all conditions
+        bool priceClosedAbove = close > closestHighFractal
+        bool validZone = closestHighFractal > closestLowFractal
+        bool withinRange = barsFromFractal <= fvgMaxDistance
+        bool sizeWithinLimit = entryAreaSize <= maxEntryAreaSize
+        
+        if not alreadyUsed and priceClosedAbove and validZone and withinRange and sizeWithinLimit
+            startBar = nearestFractalBar
+            
+            newBox = box.new(left=startBar, top=closestHighFractal, right=bar_index + 500, bottom=closestLowFractal, bgcolor=color.new(color.blue, 75), border_color=color.new(color.blue, 50), border_width=2)
+            
+            array.push(entryBoxes, newBox)
+            
+            // Mark this pair as used
+            array.push(usedFractalPairs, pairId)
+            if array.size(usedFractalPairs) > 50
+                array.shift(usedFractalPairs)
+            
+            // Set flag for alert
+            newEntryAreaCreated := true
+            alertEntryTop := closestHighFractal
+            alertEntryBottom := closestLowFractal
+
+// Manage existing boxes - invalidate if price wicks through by 1 tick
+if array.size(entryBoxes) > 0
+    for i = array.size(entryBoxes) - 1 to 0
+        b = array.get(entryBoxes, i)
+        bottom = box.get_bottom(b)
+        
+        // Invalidate if low wicks below bottom by 1 tick or more
+        wickedBelowBottom = low < (bottom - syminfo.mintick)
+        
+        if wickedBelowBottom
+            box.delete(b)
+            array.remove(entryBoxes, i)
+        else
+            box.set_right(b, bar_index + 500)
+
+// Debug: show where fractals are detected
+showFractals = input.bool(true, title="Show Fractal Markers")
+plotchar(showFractals and isHighFractal, "High Fractal", "▼", location.abovebar, color.red, size=size.auto, offset=-2)
+plotchar(showFractals and isLowFractal, "Low Fractal", "▲", location.belowbar, color.lime, size=size.auto, offset=-2)
+
+// Alert condition - only trigger after bar closes and entry area is still valid
+if enableAlerts and newEntryAreaCreated and barstate.isconfirmed and not na(alertEntryTop) and not na(alertEntryBottom)
+    alert("New GC Entry Area formed! Top: " + str.tostring(alertEntryTop) + " Bottom: " + str.tostring(alertEntryBottom), alert.freq_once_per_bar)
+
+// Reset alert variables after alert fires (or if no alert needed)
+if barstate.isconfirmed
+    newEntryAreaCreated := false
+    alertEntryTop := na
+    alertEntryBottom := na
+
+
+plot(close)

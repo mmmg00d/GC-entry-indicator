@@ -34,6 +34,7 @@ var string[] usedFractalPairs = array.new_string()
 var bool newEntryAreaCreated = false
 var float alertEntryTop = na
 var float alertEntryBottom = na
+var int alertDelayBars = 0  // Counter for 1-bar delay
 
 // Add fractals to storage
 if isHighFractal
@@ -120,9 +121,12 @@ if bullishFVG or bearishFVG
             // Set flag for alert ONLY after box is successfully created
             // Check one more time that the values are different
             if closestHighFractal != closestLowFractal
-                newEntryAreaCreated := true
-                alertEntryTop := closestHighFractal
-                alertEntryBottom := closestLowFractal
+                // Only set flag if bar is confirmed (closed)
+                if barstate.isconfirmed
+                    newEntryAreaCreated := true
+                    alertEntryTop := closestHighFractal
+                    alertEntryBottom := closestLowFractal
+                    alertDelayBars := 1  // Start 1-bar delay countdown
 
 // Manage existing boxes - invalidate if price wicks through by 1 tick
 if array.size(entryBoxes) > 0

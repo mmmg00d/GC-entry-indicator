@@ -34,7 +34,7 @@ var string[] usedFractalPairs = array.new_string()
 var bool newEntryAreaCreated = false
 var float alertEntryTop = na
 var float alertEntryBottom = na
-var int alertDelayBars = 0  // Counter for 1-bar delay
+var int alertDelayBars = 0  // Counter for 2-bar delay
 
 // Add fractals to storage
 if isHighFractal
@@ -126,7 +126,7 @@ if bullishFVG or bearishFVG
                     newEntryAreaCreated := true
                     alertEntryTop := closestHighFractal
                     alertEntryBottom := closestLowFractal
-                    alertDelayBars := 1  // Start 1-bar delay countdown
+                    alertDelayBars := 2  // Start 2-bar delay countdown
 
 // Manage existing boxes - invalidate if price wicks through by 1 tick
 if array.size(entryBoxes) > 0
@@ -140,26 +140,37 @@ if array.size(entryBoxes) > 0
         if wickedBelowBottom
             box.delete(b)
             array.remove(entryBoxes, i)
+            
+            // If this is the entry area we're waiting to alert on, cancel the alert
+            if not na(alertEntryBottom) and math.abs(bottom - (alertEntryBottom + syminfo.mintick)) < syminfo.mintick
+                newEntryAreaCreated := false
+                alertEntryTop := na
+                alertEntryBottom := na
+                alertDelayBars := 0
         else
             box.set_right(b, bar_index + 500)
 
-// Debug: show where fractals are detected
-showFractals = input.bool(true, title="Show Fractal Markers")
-plotchar(showFractals and isHighFractal, "High Fractal", "▼", location.abovebar, color.red, size=size.auto, offset=-2)
-plotchar(showFractals and isLowFractal, "Low Fractal", "▲", location.belowbar, color.lime, size=size.auto, offset=-2)
+// Countdown the delay timer only when bar closes
+if barstate.isconfirmed and alertDelayBars > 0
+    alertDelayBars := alertDelayBars - 1
 
-// Alert condition - only trigger after bar closes, entry area created, and values are valid
-if enableAlerts and newEntryAreaCreated and barstate.isconfirmed and not na(alertEntryTop) and not na(alertEntryBottom) and alertEntryTop > alertEntryBottom
+// Alert condition - only trigger after 2-bar delay AND entry area is still valid
+if enableAlerts and newEntryAreaCreated and alertDelayBars == 0 and barstate.isconfirmed and not na(alertEntryTop) and not na(alertEntryBottom) and alertEntryTop > alertEntryBottom
     // Format with more decimal places to show difference
     topStr = str.tostring(alertEntryTop, format.mintick)
     bottomStr = str.tostring(alertEntryBottom, format.mintick)
     alert("New GC Entry Area formed! Top: " + topStr + " Bottom: " + bottomStr, alert.freq_once_per_bar)
 
 // Reset alert variables after alert fires (or if no alert needed)
-if barstate.isconfirmed
+if barstate.isconfirmed and alertDelayBars == 0
     newEntryAreaCreated := false
     alertEntryTop := na
     alertEntryBottom := na
+
+// Debug: show where fractals are detected
+showFractals = input.bool(true, title="Show Fractal Markers")
+plotchar(showFractals and isHighFractal, "High Fractal", "▼", location.abovebar, color.red, size=size.auto, offset=-2)
+plotchar(showFractals and isLowFractal, "Low Fractal", "▲", location.belowbar, color.lime, size=size.auto, offset=-2)
 
 
 plot(close)

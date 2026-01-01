@@ -6,6 +6,7 @@ fvgMaxDistance = input.int(10, title="Max Candles from Fractal to FVG", minval=1
 fvgMinTicks = input.int(5, title="Minimum FVG Size (ticks)", minval=1, maxval=100)
 maxEntryAreaSize = input.int(50, title="Max Entry Area Size (ticks)", minval=5, maxval=500)
 enableAlerts = input.bool(true, title="Enable Alerts")
+removeOverlaps = input.bool(false, title="Remove Overlapping Entry Areas (keep lowest)")
 
 // Bill Williams Fractal Recognition
 isBWFractal(mode) =>
@@ -109,24 +110,45 @@ if bullishFVG or bearishFVG
         if not alreadyUsed and priceClosedAbove and validZone and withinRange and sizeWithinLimit
             startBar = nearestFractalBar
             
-            newBox = box.new(left=startBar, top=closestHighFractal, right=bar_index + 500, bottom=closestLowFractal, bgcolor=color.new(color.blue, 75), border_color=color.new(color.blue, 50), border_width=2)
+            // Check for overlaps if removeOverlaps is enabled
+            bool hasOverlap = false
+            if removeOverlaps and array.size(entryBoxes) > 0
+                // Check if this new entry area overlaps with any existing ones
+                for j = 0 to array.size(entryBoxes) - 1
+                    existingBox = array.get(entryBoxes, j)
+                    existingTop = box.get_top(existingBox)
+                    existingBottom = box.get_bottom(existingBox)
+                    
+                    // Check if ranges overlap
+                    if not (closestHighFractal < existingBottom or closestLowFractal > existingTop)
+                        hasOverlap := true
+                        // If new entry area is lower, remove the existing one
+                        if closestLowFractal < existingBottom
+                            box.delete(existingBox)
+                            array.remove(entryBoxes, j)
+                            hasOverlap := false  // Allow new one to be created
+                        break
             
-            array.push(entryBoxes, newBox)
-            
-            // Mark this pair as used
-            array.push(usedFractalPairs, pairId)
-            if array.size(usedFractalPairs) > 50
-                array.shift(usedFractalPairs)
-            
-            // Set flag for alert ONLY after box is successfully created
-            // Check one more time that the values are different
-            if closestHighFractal != closestLowFractal
-                // Only set flag if bar is confirmed (closed)
-                if barstate.isconfirmed
-                    newEntryAreaCreated := true
-                    alertEntryTop := closestHighFractal
-                    alertEntryBottom := closestLowFractal
-                    alertDelayBars := 2  // Start 2-bar delay countdown
+            // Only create box if no overlap or if we removed the overlapping one
+            if not hasOverlap
+                newBox = box.new(left=startBar, top=closestHighFractal, right=bar_index + 500, bottom=closestLowFractal, bgcolor=color.new(color.blue, 75), border_color=color.new(color.blue, 50), border_width=2)
+                
+                array.push(entryBoxes, newBox)
+                
+                // Mark this pair as used
+                array.push(usedFractalPairs, pairId)
+                if array.size(usedFractalPairs) > 50
+                    array.shift(usedFractalPairs)
+                
+                // Set flag for alert ONLY after box is successfully created
+                // Check one more time that the values are different
+                if closestHighFractal != closestLowFractal
+                    // Only set flag if bar is confirmed (closed)
+                    if barstate.isconfirmed
+                        newEntryAreaCreated := true
+                        alertEntryTop := closestHighFractal
+                        alertEntryBottom := closestLowFractal
+                        alertDelayBars := 2  // Start 2-bar delay countdown
 
 // Manage existing boxes - invalidate if price wicks through by 1 tick
 if array.size(entryBoxes) > 0
@@ -150,22 +172,28 @@ if array.size(entryBoxes) > 0
         else
             box.set_right(b, bar_index + 500)
 
+// ============================================
+// ALERT SECTION - Uncomment lines below to enable alerts
+// ============================================
 // Countdown the delay timer only when bar closes
-if barstate.isconfirmed and alertDelayBars > 0
-    alertDelayBars := alertDelayBars - 1
+//if barstate.isconfirmed and alertDelayBars > 0
+//    alertDelayBars := alertDelayBars - 1
 
 // Alert condition - only trigger after 2-bar delay AND entry area is still valid
-if enableAlerts and newEntryAreaCreated and alertDelayBars == 0 and barstate.isconfirmed and not na(alertEntryTop) and not na(alertEntryBottom) and alertEntryTop > alertEntryBottom
-    // Format with more decimal places to show difference
-    topStr = str.tostring(alertEntryTop, format.mintick)
-    bottomStr = str.tostring(alertEntryBottom, format.mintick)
-    alert("New GC Entry Area formed! Top: " + topStr + " Bottom: " + bottomStr, alert.freq_once_per_bar)
+//if enableAlerts and newEntryAreaCreated and alertDelayBars == 0 and barstate.isconfirmed and not na(alertEntryTop) and not na(alertEntryBottom) and alertEntryTop > alertEntryBottom
+//    // Format with more decimal places to show difference
+//    topStr = str.tostring(alertEntryTop, format.mintick)
+//    bottomStr = str.tostring(alertEntryBottom, format.mintick)
+//    alert("New GC Entry Area formed! Top: " + topStr + " Bottom: " + bottomStr, alert.freq_once_per_bar)
 
 // Reset alert variables after alert fires (or if no alert needed)
-if barstate.isconfirmed and alertDelayBars == 0
-    newEntryAreaCreated := false
-    alertEntryTop := na
-    alertEntryBottom := na
+//if barstate.isconfirmed and alertDelayBars == 0
+//    newEntryAreaCreated := false
+//    alertEntryTop := na
+//    alertEntryBottom := na
+// ============================================
+// END ALERT SECTION
+// ============================================
 
 // Debug: show where fractals are detected
 showFractals = input.bool(true, title="Show Fractal Markers")

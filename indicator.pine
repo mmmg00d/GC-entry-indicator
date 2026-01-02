@@ -133,8 +133,38 @@ if bullishFVG or bearishFVG
             // Only create box if no overlap or if we removed the overlapping one
             if not hasOverlap
                 newBox = box.new(left=startBar, top=closestHighFractal, right=bar_index + 500, bottom=closestLowFractal, bgcolor=color.new(color.blue, 75), border_color=color.new(color.blue, 50), border_width=2)
-                
                 array.push(entryBoxes, newBox)
+                
+                // Create timestamp label for entry areas older than 1 day
+                entryTime = time[bar_index - startBar]
+                daysSinceEntry = (timenow - entryTime) / 86400000  // milliseconds to days
+                
+                if daysSinceEntry >= 1
+                    // Format: "Thu, 12/11 entry 10:22am" - using exchange timezone
+                    // Note: COMEX times are in US Central Time (CT)
+                    dayOfWeek = str.format("{0,date,EEE}", entryTime)
+                    dateStr = str.format("{0,date,M/d}", entryTime)
+                    
+                    // Get hour and minute from the timestamp
+                    entryHour = hour(entryTime)
+                    entryMinute = minute(entryTime)
+                    
+                    // Format time manually to ensure correct display
+                    ampm = entryHour >= 12 ? "pm" : "am"
+                    displayHour = entryHour > 12 ? entryHour - 12 : (entryHour == 0 ? 12 : entryHour)
+                    minuteStr = str.format("{0,number,00}", entryMinute)
+                    timeStr = str.tostring(displayHour) + ":" + minuteStr + ampm
+                    
+                    labelText = dayOfWeek + ", " + dateStr + " entry " + timeStr
+                    
+                    // Position label in middle of entry area
+                    labelPrice = (closestHighFractal + closestLowFractal) / 2
+                    
+                    newLabel = label.new(x=bar_index, y=labelPrice, text=labelText, style=label.style_none, textcolor=color.new(color.blue, 30), size=size.small)
+                    array.push(entryLabels, newLabel)
+                else
+                    // Push na to keep arrays aligned
+                    array.push(entryLabels, na)
                 
                 // Mark this pair as used
                 array.push(usedFractalPairs, pairId)
@@ -151,12 +181,17 @@ if bullishFVG or bearishFVG
                         alertEntryBottom := closestLowFractal
                         alertDelayBars := 2  // Start 2-bar delay countdown
 
-// Manage existing boxes - invalidate if price wicks through by 1 tick, or mark as touched
+// Manage existing boxes and labels - invalidate if price wicks through by 1 tick, or mark as touched
 if array.size(entryBoxes) > 0
     for i = array.size(entryBoxes) - 1 to 0
         b = array.get(entryBoxes, i)
         top = box.get_top(b)
         bottom = box.get_bottom(b)
+        
+        // Update label position to follow price
+        lbl = array.get(entryLabels, i)
+        if not na(lbl)
+            label.set_x(lbl, bar_index)
         
         // Check if price touched this entry area (entered the zone)
         if low <= top and high >= bottom
@@ -170,6 +205,12 @@ if array.size(entryBoxes) > 0
         if wickedBelowBottom
             box.delete(b)
             array.remove(entryBoxes, i)
+            
+            // Delete corresponding label
+            lblToDelete = array.get(entryLabels, i)
+            if not na(lblToDelete)
+                label.delete(lblToDelete)
+            array.remove(entryLabels, i)
             
             // If this is the entry area we're waiting to alert on, cancel the alert
             if not na(alertEntryBottom) and math.abs(bottom - (alertEntryBottom + syminfo.mintick)) < syminfo.mintick

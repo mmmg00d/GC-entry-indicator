@@ -52,8 +52,9 @@ if isLowFractal
         array.shift(lowFractals)
         array.shift(lowFractalBars)
 
-// Array to store active entry area boxes
+// Visualization boxes
 var array<box> entryBoxes = array.new_box()
+var array<label> entryLabels = array.new_label()
 
 // When FVG occurs, find the closest high and low fractals
 if bullishFVG or bearishFVG
@@ -150,11 +151,18 @@ if bullishFVG or bearishFVG
                         alertEntryBottom := closestLowFractal
                         alertDelayBars := 2  // Start 2-bar delay countdown
 
-// Manage existing boxes - invalidate if price wicks through by 1 tick
+// Manage existing boxes - invalidate if price wicks through by 1 tick, or mark as touched
 if array.size(entryBoxes) > 0
     for i = array.size(entryBoxes) - 1 to 0
         b = array.get(entryBoxes, i)
+        top = box.get_top(b)
         bottom = box.get_bottom(b)
+        
+        // Check if price touched this entry area (entered the zone)
+        if low <= top and high >= bottom
+            // Change to dashed border with more transparency
+            box.set_border_style(b, line.style_dashed)
+            box.set_bgcolor(b, color.new(color.blue, 90))
         
         // Invalidate if low wicks below bottom by 1 tick or more
         wickedBelowBottom = low < (bottom - syminfo.mintick)

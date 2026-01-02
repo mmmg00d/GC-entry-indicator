@@ -1,0 +1,165 @@
+//@version=6
+strategy("GC 1min Entry Areas Strategy", overlay=true, max_boxes_count=500, default_qty_type=strategy.percent_of_equity, default_qty_value=100)
+
+// Input parameters
+fvgMaxDistance = input.int(10, title="Max Candles from Fractal to FVG", minval=1, maxval=50)
+fvgMinTicks = input.int(5, title="Minimum FVG Size (ticks)", minval=1, maxval=100)
+maxEntryAreaSize = input.int(50, title="Max Entry Area Size (ticks)", minval=5, maxval=500)
+riskRewardRatio = input.float(2.5, title="Risk/Reward Ratio", minval=0.5, maxval=10.0, step=0.5)
+showFractals = input.bool(true, title="Show Fractal Markers")
+
+// Bill Williams Fractal Recognition
+isBWFractal(mode) =>
+    result = mode == 1 ? (high[4] < high[2] and high[3] <= high[2] and high[2] >= high[1] and high[2] > high[0]) : mode == -1 ? (low[4] > low[2] and low[3] >= low[2] and low[2] <= low[1] and low[2] < low[0]) : false
+    result
+
+// Detect fractals
+isHighFractal = bar_index >= 4 and isBWFractal(1)
+isLowFractal = bar_index >= 4 and isBWFractal(-1)
+
+// FVG detection with minimum tick size
+minGapSize = fvgMinTicks * syminfo.mintick
+bullishFVG = bar_index >= 2 and (low[0] - high[2]) >= minGapSize
+bearishFVG = bar_index >= 2 and (low[2] - high[0]) >= minGapSize
+
+// Store recent fractals
+var float[] highFractals = array.new_float()
+var int[] highFractalBars = array.new_int()
+var float[] lowFractals = array.new_float()
+var int[] lowFractalBars = array.new_int()
+var string[] usedFractalPairs = array.new_string()
+
+// Add fractals to storage
+if isHighFractal
+    array.push(highFractals, high[2])
+    array.push(highFractalBars, bar_index - 2)
+    if array.size(highFractals) > 20
+        array.shift(highFractals)
+        array.shift(highFractalBars)
+
+if isLowFractal
+    array.push(lowFractals, low[2])
+    array.push(lowFractalBars, bar_index - 2)
+    if array.size(lowFractals) > 20
+        array.shift(lowFractals)
+        array.shift(lowFractalBars)
+
+// Visualization boxes
+var array<box> entryBoxes = array.new_box()
+
+// Track for trading - simple variables
+var float activeEntryTop = na
+var float activeEntryBottom = na
+
+// When FVG occurs, create entry areas (regardless of position)
+if bullishFVG or bearishFVG
+    
+    float closestHighFractal = na
+    int closestHighBar = na
+    
+    if array.size(highFractals) > 0
+        for i = array.size(highFractals) - 1 to 0
+            fractalBar = array.get(highFractalBars, i)
+            if fractalBar < bar_index
+                closestHighFractal := array.get(highFractals, i)
+                closestHighBar := fractalBar
+                break
+    
+    float closestLowFractal = na
+    int closestLowBar = na
+    
+    if array.size(lowFractals) > 0
+        for i = array.size(lowFractals) - 1 to 0
+            fractalBar = array.get(lowFractalBars, i)
+            if fractalBar < bar_index
+                closestLowFractal := array.get(lowFractals, i)
+                closestLowBar := fractalBar
+                break
+    
+    if not na(closestHighFractal) and not na(closestLowFractal)
+        nearestFractalBar = math.max(closestHighBar, closestLowBar)
+        barsFromFractal = bar_index - nearestFractalBar
+        entryAreaSize = (closestHighFractal - closestLowFractal) / syminfo.mintick
+        pairId = str.tostring(closestHighBar) + "_" + str.tostring(closestLowBar)
+        
+        bool alreadyUsed = false
+        if array.size(usedFractalPairs) > 0
+            for p = 0 to array.size(usedFractalPairs) - 1
+                if array.get(usedFractalPairs, p) == pairId
+                    alreadyUsed := true
+                    break
+        
+        bool priceClosedAbove = close > closestHighFractal
+        bool validZone = closestHighFractal > closestLowFractal
+        bool withinRange = barsFromFractal <= fvgMaxDistance
+        bool sizeWithinLimit = entryAreaSize <= maxEntryAreaSize
+        
+        if not alreadyUsed and priceClosedAbove and validZone and withinRange and sizeWithinLimit
+            startBar = nearestFractalBar
+            
+            newBox = box.new(left=startBar, top=closestHighFractal, right=bar_index + 500, bottom=closestLowFractal, bgcolor=color.new(color.blue, 75), border_color=color.new(color.blue, 50), border_width=2)
+            array.push(entryBoxes, newBox)
+            
+            // Store for trading (overwrites previous if not yet entered)
+            if strategy.position_size == 0
+                activeEntryTop := closestHighFractal
+                activeEntryBottom := closestLowFractal
+            
+            array.push(usedFractalPairs, pairId)
+            if array.size(usedFractalPairs) > 50
+                array.shift(usedFractalPairs)
+
+// Trade management variables
+var float tradeStopLoss = na
+var float tradeTakeProfit = na
+
+// Enter trade when price enters the entry area
+if strategy.position_size == 0 and not na(activeEntryTop)
+    if low <= activeEntryTop and high >= activeEntryBottom
+        stopLoss = activeEntryBottom - syminfo.mintick
+        riskDistance = activeEntryTop - stopLoss
+        takeProfit = activeEntryTop + (riskDistance * riskRewardRatio)
+        
+        strategy.entry("Long", strategy.long, comment="Entry Area")
+        
+        tradeStopLoss := stopLoss
+        tradeTakeProfit := takeProfit
+        
+        activeEntryTop := na
+        activeEntryBottom := na
+    // Invalidate if price breaks below
+    else if low < (activeEntryBottom - syminfo.mintick)
+        activeEntryTop := na
+        activeEntryBottom := na
+
+// Exit management
+if strategy.position_size > 0 and not na(tradeTakeProfit) and not na(tradeStopLoss)
+    if high >= tradeTakeProfit
+        strategy.close("Long", comment="TP Hit 2.5RR")
+        tradeTakeProfit := na
+        tradeStopLoss := na
+    else if low <= tradeStopLoss
+        strategy.close("Long", comment="SL Hit")
+        tradeTakeProfit := na
+        tradeStopLoss := na
+
+// Manage boxes
+if array.size(entryBoxes) > 0
+    for i = array.size(entryBoxes) - 1 to 0
+        b = array.get(entryBoxes, i)
+        bottom = box.get_bottom(b)
+        if low < (bottom - syminfo.mintick)
+            box.delete(b)
+            array.remove(entryBoxes, i)
+        else
+            box.set_right(b, bar_index + 500)
+
+// Plots
+plotchar(showFractals and isHighFractal, "High Fractal", "▼", location.abovebar, color.red, size=size.auto, offset=-2)
+plotchar(showFractals and isLowFractal, "Low Fractal", "▲", location.belowbar, color.lime, size=size.auto, offset=-2)
+
+plot(strategy.position_size > 0 and not na(tradeTakeProfit) ? tradeTakeProfit : na, "Take Profit", color.green, 3, plot.style_linebr)
+plot(strategy.position_size > 0 and not na(tradeStopLoss) ? tradeStopLoss : na, "Stop Loss", color.red, 3, plot.style_linebr)
+
+
+plot(close)

@@ -1,5 +1,5 @@
 //@version=6
-strategy("GC 1min Entry Areas Strategy", overlay=true, max_boxes_count=500, default_qty_type=strategy.percent_of_equity, default_qty_value=100)
+strategy("GC 1min Entry Areas Strategy", overlay=true, max_boxes_count=500, default_qty_type=strategy.percent_of_equity, default_qty_value=100, process_orders_on_close=false)
 
 // Input parameters
 fvgMaxDistance = input.int(10, title="Max Candles from Fractal to FVG", minval=1, maxval=50)
@@ -120,7 +120,8 @@ if strategy.position_size == 0 and not na(activeEntryTop)
         riskDistance = activeEntryTop - stopLoss
         takeProfit = activeEntryTop + (riskDistance * riskRewardRatio)
         
-        strategy.entry("Long", strategy.long, comment="Entry Area")
+        // Enter at the top of the entry area
+        strategy.entry("Long", strategy.long, limit=activeEntryTop, comment="Entry Area")
         
         tradeStopLoss := stopLoss
         tradeTakeProfit := takeProfit
@@ -132,14 +133,16 @@ if strategy.position_size == 0 and not na(activeEntryTop)
         activeEntryTop := na
         activeEntryBottom := na
 
-// Exit management
+// Exit management - close at TP or SL levels
 if strategy.position_size > 0 and not na(tradeTakeProfit) and not na(tradeStopLoss)
+    // Exit at take profit level
+    strategy.exit("Exit Long", "Long", limit=tradeTakeProfit, stop=tradeStopLoss, comment="TP/SL")
+    
+    // Check if TP or SL was hit to reset variables
     if high >= tradeTakeProfit
-        strategy.close("Long", comment="TP Hit 2.5RR")
         tradeTakeProfit := na
         tradeStopLoss := na
     else if low <= tradeStopLoss
-        strategy.close("Long", comment="SL Hit")
         tradeTakeProfit := na
         tradeStopLoss := na
 

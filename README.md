@@ -1,10 +1,12 @@
 # GC 1min Entry Areas Trading Strategy
 
-A TradingView Pine Script strategy for identifying and trading entry areas on Gold Futures (GC) using fractals and Fair Value Gaps (FVGs).
+A TradingView Pine Script strategy for identifying potential long entries on Gold Futures (GC)
 
 ## Overview
 
-This repository contains a complete trading strategy system that identifies entry areas based on fractal patterns and FVG detection, then executes trades with a risk/reward ratio of 2.5:1.
+Pine Script was developed with the free version of Claude in about a month during Dec 2025/Jan 2026 based on observations I've made over the past year or so. Objective: identify price ranges that represent potential unfilled orders and "tag along" when price retraces to that price range. Default price target is 2.5RR. 
+
+As of Jan 2025, I'm beginning to evaluate the output of the automated testing script (strategy_script.pine) using Python. Rough analysis so far, but the hours of 7-9am ET yield the most winning trades using about 6 weeks of backtesting data. 
 
 ## Repository Contents
 
@@ -48,6 +50,10 @@ This repository contains a complete trading strategy system that identifies entr
 - Visual entry area boxes with dashed borders when touched
 - Timestamps for entry areas older than 1 day
 
+<img width="916" height="800" alt="image" src="https://github.com/user-attachments/assets/1c16cc79-a1e9-4eee-9427-ed67a982b09b" />
+
+(Screenshot taken on Sunday, 11 January 2026 as GC made yet another new ATH.)
+
 ## Files Description
 
 ### `indicator_script.pine`
@@ -77,7 +83,7 @@ The strategy version for backtesting:
 **Additional Parameters**:
 - Risk/Reward Ratio: 2.5
 
-### `testing 1 Dec - 9 Jan.xlsx`
+### `testing_1Dec-9Jan.xlsx`
 
 Excel file containing trade results exported from TradingView's Strategy Tester:
 - Trade list with entry/exit prices and times
@@ -85,7 +91,7 @@ Excel file containing trade results exported from TradingView's Strategy Tester:
 - Profit factor and other performance metrics
 - Maximum drawdown information
 
-### `gc entries.ipynb`
+### `gc_entries.ipynb`
 
 Python Jupyter notebook for analyzing strategy performance:
 - Loads trade data from Excel
@@ -154,4 +160,4 @@ This strategy is for educational and research purposes only.
 
 ---
 
-*Last updated: January 2026*
+*Last updated: 11 January 2026*

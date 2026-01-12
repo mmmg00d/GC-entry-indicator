@@ -79,7 +79,7 @@ The strategy version for backtesting:
 **Additional Parameters**:
 - Risk/Reward Ratio: 2.5
 
-### `testing 1 Dec - 9 Jan.xlsx`
+### `testing_1Dec-9Jan.xlsx`
 
 Excel file containing trade results exported from TradingView's Strategy Tester:
 - Trade list with entry/exit prices and times
@@ -87,7 +87,7 @@ Excel file containing trade results exported from TradingView's Strategy Tester:
 - Profit factor and other performance metrics
 - Maximum drawdown information
 
-### `gc entries.ipynb`
+### `gc_entries.ipynb`
 
 Python Jupyter notebook for analyzing strategy performance:
 - Loads trade data from Excel

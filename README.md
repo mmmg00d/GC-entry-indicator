@@ -6,7 +6,7 @@ A TradingView Pine Script strategy for identifying potential long entries on Gol
 
 Pine Script was developed with the free version of Claude in about a month during Dec 2025/Jan 2026 based on observations I've made over the past year or so. Objective: identify price ranges that represent potential unfilled orders and "tag along" when price retraces to that price range. Default price target is 2.5RR. 
 
-As of Jan 2025, I'm beginning to evaluate the output of the automated testing script (strategy_script.pine) using Python. Rough analysis so far, but the hours of 7-9am ET yield the most winning trades using about 6 weeks of backtesting data. 
+As of Jan 2025, I'm beginning to evaluate the output of the automated testing script (strategy_script.pine) using Python. Rough analysis so far, but the hours of 7-9am ET yield the most winning trades using about 21 weeks of backtesting data. Using all trades from 7-9am ET, the strategy is profitable, although a trailing drawdown limit of $6500 would have been hit exceeded (where $6500 is the max buffer and ratchets up only after a winning trade). 
 
 ## Repository Contents
 
@@ -14,7 +14,7 @@ As of Jan 2025, I'm beginning to evaluate the output of the automated testing sc
 ├── indicator_script.pine          # TradingView indicator for visualization
 ├── strategy_script.pine           # TradingView strategy for backtesting
 ├── strategy_output.xlsx           # Trade results exported from TradingView
-├── gc entries.ipynb               # Python notebook for performance analysis
+├── gc_entries.ipynb               # Python notebook for performance analysis
 └── README.md                      # This file
 ```
 
@@ -53,6 +53,9 @@ As of Jan 2025, I'm beginning to evaluate the output of the automated testing sc
 <img width="916" height="800" alt="image" src="https://github.com/user-attachments/assets/1c16cc79-a1e9-4eee-9427-ed67a982b09b" />
 
 (Screenshot taken on Sunday, 11 January 2026 as GC made yet another new ATH.)
+
+<img width="1095" height="545" alt="image" src="https://github.com/user-attachments/assets/423cad57-b8f2-491b-b016-a961240cc621" />
+
 
 ## Files Description
 
@@ -160,4 +163,4 @@ This strategy is for educational and research purposes only.
 
 ---
 
-*Last updated: 11 January 2026*
+*Last updated: 12 January 2026*

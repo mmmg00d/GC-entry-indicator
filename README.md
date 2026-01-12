@@ -50,6 +50,10 @@ As of Jan 2025, I'm beginning to evaluate the output of the automated testing sc
 - Visual entry area boxes with dashed borders when touched
 - Timestamps for entry areas older than 1 day
 
+<img width="916" height="800" alt="image" src="https://github.com/user-attachments/assets/1c16cc79-a1e9-4eee-9427-ed67a982b09b" />
+
+(Screenshot taken on Sunday, 11 January 2026 as GC made yet another new ATH.)
+
 ## Files Description
 
 ### `indicator_script.pine`

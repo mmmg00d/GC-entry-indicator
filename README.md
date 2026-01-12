@@ -1,10 +1,12 @@
 # GC 1min Entry Areas Trading Strategy
 
-A TradingView Pine Script strategy for identifying and trading entry areas on Gold Futures (GC) using fractals and Fair Value Gaps (FVGs).
+A TradingView Pine Script strategy for identifying potential long entries on Gold Futures (GC)
 
 ## Overview
 
-This repository contains a complete trading strategy system that identifies entry areas based on fractal patterns and FVG detection, then executes trades with a risk/reward ratio of 2.5:1.
+Pine Script was developed with the free version of Claude in about a month during Dec 2025/Jan 2026 based on observations I've made over the past year or so. Objective: identify price ranges that represent potential unfilled orders and "tag along" when price retraces to that price range. Default price target is 2.5RR. 
+
+As of Jan 2025, I'm beginning to evaluate the output of the automated testing script (strategy_script.pine) using Python. Rough analysis so far, but the hours of 7-9am ET yield the most winning trades using about 6 weeks of backtesting data. 
 
 ## Repository Contents
 
@@ -154,4 +156,4 @@ This strategy is for educational and research purposes only.
 
 ---
 
-*Last updated: January 2026*
+*Last updated: 11 January 2026*

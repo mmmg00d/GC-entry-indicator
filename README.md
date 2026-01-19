@@ -79,6 +79,20 @@ Left: all entry areas. Right: entry areas after removing overlapping entry areas
 #### Results and Interpretations (experimental version)
 Using the same 21-week period, I collected and analyzed testing results after selecting the parameter to remove overlapping entry areas. As expected, the total number of valid trades decreased. Removing overlapping entries reduced the win rate and profitability, and drawdown reached a lower minimum. So, simply using only "fresh" entry areas that are not overlapped does not lead to better P/L results. 
 
+#### Strategy Performance Comparison
+
+The table below compares the results of the **Stable** and **Experimental** versions of the strategy.
+
+| Version           | Wins | Losses | Win Rate | Total P/L ($) | Lowest Drawdown ($) |
+|-------------------|------|--------|----------|---------------|---------------------|
+| **Stable**        | 138  | 246    | 36%      | 49,500        | -2,500              |
+| **Experimental** | 96   | 193    | 33%      | 23,500        | -4,250              |
+
+#### Notes
+- The **Stable** version demonstrates higher profitability, a better win rate, and materially lower drawdown.
+- The **Experimental** version shows lower profitability, deeper drawdown, and fewer total trades
+
+
 
 
 

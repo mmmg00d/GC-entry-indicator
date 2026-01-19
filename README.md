@@ -21,7 +21,7 @@ Using all trades from 7-9am ET, the strategy is profitable, although a trailing 
 
 
 #### Quips and brief reflections:
-Testing and revising the experimental branch while reading "Fooled by Randomness" by Nassim Nicholas Taleb (mid-Jan 2026). Perhaps like previous strategies I've tested over the past couple years, the successful GC trades I've observed and executed may be governed by a discretionary component and/or influenced by luck; I currently don't know the significance of those factors, which may oscure a systematic approach.
+Testing and revising the experimental branch while reading "Fooled by Randomness" by Nassim Nicholas Taleb (mid-Jan 2026). Perhaps like previous strategies I've tested over the past couple years, the successful GC trades I've observed and executed may be governed by a discretionary component and/or influenced by luck; I currently don't know the significance of those factors, which may obscure a systematic approach.
 
 
 

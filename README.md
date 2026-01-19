@@ -6,135 +6,38 @@ A TradingView Pine Script strategy for identifying potential long entries on Gol
 
 Pine Script was developed with the free version of Claude in about a month during Dec 2025/Jan 2026 based on observations I've made over the past year or so. Objective: identify price ranges that represent potential unfilled orders and "tag along" when price retraces to that price range. 
 
-As of Jan 2025, I'm beginning to evaluate the output of the automated testing script (strategy_script.pine) using Python. Rough analysis so far, but the hours of 7-9am ET yield the most winning trades using about 21 weeks of backtesting data. Using all trades from 7-9am ET, the strategy is profitable, although a trailing drawdown limit of $6500 would have been exceeded (where $6500 is the max buffer and ratchets up only after a winning trade). Analysis uses default values of $500 and 2.5RR for position size and price target, respectively.
+As of Jan 2026, I'm beginning to evaluate the output of the automated testing script (strategy_script.pine) using Python. Rough analysis so far, but the hours of 7-9am ET yield the most winning trades using about 21 weeks of backtesting data. 
 
-## Repository Contents
 
-```
-├── indicator_script.pine          # TradingView indicator for visualization
-├── strategy_script.pine           # TradingView strategy for backtesting
-├── strategy_output.xlsx           # Trade results exported from TradingView
-├── gc_entries.ipynb               # Python notebook for performance analysis
-└── README.md                      # This file
-```
+#### Stable version:
+Using all trades from 7-9am ET, the strategy is profitable, although a trailing drawdown limit of $6500 would have been exceeded (where $6500 is the max buffer and ratchets up only after a winning trade). Analysis uses default values of $500 and 2.5RR for position size and price target, respectively.
 
-## Strategy Logic
 
-### Entry Area Formation
+#### Experimental version (and possible next steps):
+1) How does P/L change after removing overlapping entry areas? (see screenshot of parameter selected to remove overlapping entry areas)
+2) Review raw data of winning trades from 7-9am ET...qualitatively, do these trades share any charateristics?
+3) Test a hunch/observation: Sunday evening price action seems to often reveal large "pops" when profitable trades occur - is this true? What hours generally contain these "pops" and is that timeframe profitable?
+4) If the P/L is insufficient and/or the trailing drawdown is hit, adjust the parameters and retest using the same 21-week period. Since my best trades occured after a large "pop," I could test entries occuring after larger "pops." Potential things to test: larger FVG size, ratio of FVG to entry area (larger?...need to collect a few examples)
 
-1. **Fractal Detection**: Identifies fractals (5-candle patterns)
-   - High fractals mark potential resistance
-   - Low fractals mark potential support
 
-2. **FVG Trigger**: When a Fair Value Gap (FVG) occurs:
-   - Finds the closest high and low fractals
-   - Creates an entry area between these fractals
+#### Quips, reflections, conclusions so far:
+Testing and revising the experimental branch while reading "Fooled by Randomness" by Nassim Nicholas Taleb (mid-Jan 2026). Perhaps like previous strategies I've test over the past couple years, the successful GC trades I've observed and executed may be governed by a discretionary component and/or influenced by luck; I currently don't know the significance of those factors.
 
-3. **Validation Criteria**:
-   - Price must close above the high fractal
-   - FVG must occur within X candles of the fractal (default: 10)
-   - Entry area must be within size limit (default: 50 ticks)
-   - Minimum FVG size (default: 5 ticks)
 
-### Trade Execution
 
-- **Entry**: Limit order at the top of the entry area
-- **Stop Loss**: 1 tick below the low fractal
-- **Take Profit**: 2.5x the risk distance above entry
-- **Invalidation**: Entry area removed if price wicks 1 tick below the bottom
 
-### Key Features
-
-- Tracks multiple entry areas simultaneously
-- Handles overlapping entry areas (optional removal of higher overlaps)
-- Visual entry area boxes with dashed borders when touched
-- Timestamps for entry areas older than 1 day
+#### Example
+Screenshot taken on Sunday, Jan 11 2026 as GC made yet another new ATH
 
 <img width="916" height="800" alt="image" src="https://github.com/user-attachments/assets/1c16cc79-a1e9-4eee-9427-ed67a982b09b" />
 
-(Screenshot taken on Sunday, 11 January 2026 as GC made yet another new ATH.)
+#### Distribution of winning and losing trades (stable version)
+<img width="1113" height="549" alt="image" src="https://github.com/user-attachments/assets/061e71a7-9a59-4140-b249-873d08404421" />
+
+
+#### P/L (stable version)
 
 <img width="1095" height="545" alt="image" src="https://github.com/user-attachments/assets/423cad57-b8f2-491b-b016-a961240cc621" />
-
-
-## Files Description
-
-### `indicator_script.pine`
-
-The indicator version for chart visualization:
-- Displays entry areas as blue boxes
-- Shows fractal markers (▼ for highs, ▲ for lows)
-- Entry areas turn dashed when price enters them
-- Includes commented-out alert functionality
-- Optional overlap removal feature
-
-**Parameters**:
-- Max Candles from Fractal to FVG: 10
-- Minimum FVG Size (ticks): 5
-- Max Entry Area Size (ticks): 50
-- Show Fractal Markers: true
-- Remove Overlapping Entry Areas: false
-
-### `strategy_script.pine`
-
-The strategy version for backtesting:
-- All indicator features plus trade execution
-- Records entries at the top of entry areas
-- Exits at precise TP/SL levels using limit/stop orders
-- Tracks performance metrics
-
-**Additional Parameters**:
-- Risk/Reward Ratio: 2.5
-
-### `testing_1Dec-9Jan.xlsx`
-
-Excel file containing trade results exported from TradingView's Strategy Tester:
-- Trade list with entry/exit prices and times
-- Win/loss statistics
-- Profit factor and other performance metrics
-- Maximum drawdown information
-
-### `gc_entries.ipynb`
-
-Python Jupyter notebook for analyzing strategy performance:
-- Loads trade data from Excel
-- Basic descriptive stats (Distribution of Winning and Losing trades by entry hour)
-
-## Installation & Usage
-
-### TradingView Setup
-
-1. Open TradingView and navigate to Gold Futures (GC) 1-minute chart
-2. Open Pine Editor
-3. For visualization:
-   - Copy contents of `indicator_script.pine`
-   - Click "Add to Chart"
-4. For backtesting:
-   - Copy contents of `strategy_script.pine`
-   - Click "Add to Chart"
-   - Open Strategy Tester tab to view results
-
-### Exporting Trade Data
-
-1. Run the strategy script on your desired timeframe
-2. Open Strategy Tester panel
-3. Click "List of Trades"
-4. Export to Excel/CSV
-
-### Python Analysis
-
-1. Install required packages:
-```bash
-pip install pandas numpy matplotlib seaborn openpyxl jupyter
-```
-
-2. Launch Jupyter notebook:
-```bash
-jupyter notebook analysis_notebook.ipynb
-```
-
-3. Update the file path to your `strategy_output.xlsx`
-4. Run all cells to generate analysis
 
 ## Strategy Parameters
 
@@ -145,6 +48,39 @@ jupyter notebook analysis_notebook.ipynb
 | Max Entry Area Size | 50 ticks | Largest allowed entry area |
 | Risk/Reward Ratio | 2.5 | Target profit as multiple of risk |
 | Remove Overlaps | false | Keep only the lowest overlapping entry area |
+
+
+
+### Experimental Version
+
+
+#### Removing Overlapping Entry Areas
+
+Parameter that removes overlapping entry areas
+
+<img width="375" height="429" alt="image" src="https://github.com/user-attachments/assets/6e3fd423-ef5f-40ed-913d-83849cad9c99" />
+
+
+Left: all entry areas. Right: entry areas after removing overlapping entry areas. (Monday, Jan 12 2026 approx 12:30am ET) 
+
+<img width="1639" height="717" alt="image" src="https://github.com/user-attachments/assets/f9d51d30-ed34-43d1-916c-d7bb7638e482" />
+
+
+
+#### Distribution of winning and losing trades (experimental version)
+
+<img width="1111" height="542" alt="image" src="https://github.com/user-attachments/assets/9dafeaa5-625e-4f4c-8159-4ea468a2a87d" />
+
+#### P/L (experimental version)
+
+<img width="1113" height="542" alt="image" src="https://github.com/user-attachments/assets/2610d891-909e-40d0-9daa-968370053fdb" />
+
+
+#### Results and Interpretations (experimental version)
+Using the same 21-week period, I collected and analyzed testing results after selecting the parameter to remove overlapping entry areas. As expected, the total number of valid trades decreased. Removing overlapping entries reduced the win rate and profitability, and drawdown reached a lower minimum. So, simply using only "fresh" entry areas that are not overlapped does not lead to better P/L results. 
+
+
+
 
 ## Performance Considerations
 
@@ -163,4 +99,4 @@ This strategy is for educational and research purposes only.
 
 ---
 
-*Last updated: 12 January 2026*
+*Last updated: Jan 19 2026*

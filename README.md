@@ -20,8 +20,8 @@ Using all trades from 7-9am ET, the strategy is profitable, although a trailing 
 4) If the P/L is insufficient and/or the trailing drawdown is hit, adjust the parameters and retest using the same 21-week period. Since my best trades occured after a large "pop," I could test entries occuring after larger "pops." Potential things to test: larger FVG size, ratio of FVG to entry area (larger?...need to collect a few examples)
 
 
-#### Quips, reflections, conclusions so far:
-Testing and revising the experimental branch while reading "Fooled by Randomness" by Nassim Nicholas Taleb (mid-Jan 2026). Perhaps like previous strategies I've test over the past couple years, the successful GC trades I've observed and executed may be governed by a discretionary component and/or influenced by luck; I currently don't know the significance of those factors.
+#### Quips and brief reflections:
+Testing and revising the experimental branch while reading "Fooled by Randomness" by Nassim Nicholas Taleb (mid-Jan 2026). Perhaps like previous strategies I've tested over the past couple years, the successful GC trades I've observed and executed may be governed by a discretionary component and/or influenced by luck; I currently don't know the significance of those factors, which may oscure a systematic approach.
 
 
 

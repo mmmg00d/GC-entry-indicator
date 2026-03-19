@@ -4,9 +4,9 @@ A TradingView Pine Script strategy for identifying potential long entries on Gol
 
 ## Overview
 
-Pine Script was developed with the free version of Claude in about a month during Dec 2025/Jan 2026 based on observations I've made over the past year or so. Objective: identify price ranges that represent potential unfilled orders and "tag along" when price retraces to that price range. 
+Pine Script was written with the free version of Claude in about a month during Dec 2025/Jan 2026 based on observations I've made over the past year or so. Objective: identify price ranges that represent potential unfilled orders and "tag along" when price retraces to that price range. 
 
-As of Jan 2025, I'm beginning to evaluate the output of the automated testing script (strategy_script.pine) using Python. Rough analysis so far, but the hours of 7-9am ET yield the most winning trades using about 21 weeks of backtesting data. Using all trades from 7-9am ET, the strategy is profitable, although a trailing drawdown limit of $6500 would have been exceeded (where $6500 is the max buffer and ratchets up only after a winning trade). Analysis uses default values of $500 and 2.5RR for position size and price target, respectively.
+As of Jan 2026, I'm beginning to evaluate the output of the automated testing script (strategy_script.pine) using Python. Rough analysis so far, but the hours of 7-9am ET yield the most winning trades using about 21 weeks of backtesting data. Using all trades from 7-9am ET, the strategy is profitable, although a trailing drawdown limit of $6500 would have been exceeded (where $6500 is the max buffer and ratchets up only after a winning trade). Analysis uses default values of $500 and 2.5RR for position size and price target, respectively.
 
 ## Repository Contents
 
